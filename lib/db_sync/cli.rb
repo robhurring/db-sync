@@ -1,4 +1,5 @@
 require 'optparse'
+require_relative './config'
 
 module DbSync
   class Cli
@@ -6,11 +7,12 @@ module DbSync
 
     def initialize(argv)
       @argv = argv
+      @config = DbSync::Config.load!
     end
 
     def run
       method = (argv.shift || 'help').to_sym
-      if [:pull, :sync, :version].include? method
+      if [:init, :pull, :sync, :version].include? method
         send(method)
       else
         help
@@ -21,6 +23,10 @@ module DbSync
       require_relative './version'
       puts DbSync::VERSION
       exit 0
+    end
+
+    def init
+      DbSync::Config.init!
     end
 
     # db-sync pull beautysage:qa > ~/Desktop/somefile.dump
