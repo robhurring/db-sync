@@ -42,8 +42,12 @@ module DbSync
       end
 
       def help
-        puts "Could not find config file in ~/.db-config.yml or ./.db-config.yml"
+        puts "No config file could be found!"
+        puts
         puts "To create a config file run: #{File.basename($0)} init [PATH]"
+        puts "If you would like to use a custom config file, see the OPTIONS provided"
+        puts "by the command you are trying to run."
+        puts
         exit 1
       end
     end
