@@ -1,12 +1,32 @@
+# define your apps and environments for syncing and pulling the database
 apps:
-  beautysage:
-    qa:
-      server: bs.new
-      host: bs-stage01-clone.c45233.blueboxgrid.com
-      database: beautysage_staging
-      username: beautysage_staging
-      password: somepassword
+  # Your apps list, which you will pass into the +sync+ and +pull+ commands
+  # in the format of NAME:ENVIRONMENT. The keys under +apps+ is the app name
+  # and any nested keys under that are for the environment-specific config
+  #
+  # Example for syncing this app:
+  #   db-sync sync ecommerce:production ecommerce:local
+  ecommerce:
+    production:
+      # ths SSH hostname
+      server: sshhostname.com
+      # your database hostname
+      host: mydatabasehostname.com
+      # your database name
+      database: database_name
+      # database username
+      username: database_username
+      # database password
+      password: database_password
+      # if pg_dump isn't in the $PATH then you can specify that here
+      pg_dump: /usr/pgsql-0.9.1/bin/pg_dump
+      # if pg_restore isn't in the $PATH then you can specify that here
+      pg_restore: /usr/pgsql-0.9.1/bin/pg_restore
+
+    # a local environment, usually much more lax than the remote environments
+    # all the same keys as above are supported here, but you generally dont
+    # need the server information since it is local
     local:
       server: localhost
-      database: spree_upgrade_development
-      username: postgres
+      database: database_name
+      username: database_username

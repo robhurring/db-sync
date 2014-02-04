@@ -7,7 +7,6 @@ module DbSync
 
     def initialize(argv)
       @argv = argv
-      @config = DbSync::Config.load!
     end
 
     def run
@@ -26,19 +25,32 @@ module DbSync
     end
 
     def init
-      DbSync::Config.init!
+      filename = argv.shift
+      DbSync::Config.init!(filename)
     end
 
     # db-sync pull beautysage:qa > ~/Desktop/somefile.dump
     def pull
       opts = parse_opts(:pull)
+      config = get_config(opts)
+
       puts opts.inspect
     end
 
     # db-sync sync beautysage:qa beautysage:local
     def sync
       opts = parse_opts(:sync)
+      config = get_config(opts)
+
       puts opts.inspect
+    end
+
+    def get_config(opts = {})
+      if opts[:config]
+        DbSync::Config.load!(opts[:config])
+      else
+        DbSync::Config.load_default!
+      end
     end
 
     def help
@@ -47,6 +59,7 @@ module DbSync
         =======
         pull      Pull a database from a remote server to a file
         sync      Pull a database from a remote server to your localhost
+        init      Create a db-sync config file (default: ~/.db-sync.yml)
         version   db-sync version
 
         Add '-h' to any command to see their usage
@@ -75,7 +88,7 @@ module DbSync
           o.define_head "Sync a database from a remote server to a local database"
         end
 
-        o.on("-e", "--environment", "Pull from this database") { |v| opts[:environment] = v }
+        o.on("-c", "--config FILENAME", "Path to db-sync config (default: ~/.db-sync.yml)") { |v| opts[:config] = v }
         o.parse!(argv)
 
         opts[:from][:server] = from = argv.shift

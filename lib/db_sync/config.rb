@@ -2,31 +2,43 @@ require 'yaml'
 
 module DbSync
   class Config
-    FILENAME = '.db-sync.yml'
-    PATHS = ['~', '.']
-    TEMPLATE = File.expand_path('../../templates/.db-sync.yml.example')
+    DEFAULT_CONFIG = '~/.db-sync.yml'
+    TEMPLATE = File.expand_path('../../../templates/.db-sync.yml.example', __FILE__)
 
     class << self
-      def load!
-        config_file = nil
+      def init!(filename = nil)
+        filename ||= DEFAULT_CONFIG
+        filename = File.expand_path(filename)
 
-        PATHS.each do |path|
-          filename = File.expand_path(File.join(path, FILENAME))
-          puts filename
-          if File.exists?(filename)
-            config_file = filename
-          end
+        if Dir.exists?(filename)
+          filename = File.join(filename, '.db-sync.yml')
         end
 
-        if config_file.nil?
+        if File.exists?(filename)
+          puts "File already exists at this location!"
           help
         else
-          new(config_file)
+          template = File.read(TEMPLATE)
+
+          File.open(filename, 'w+') do |f|
+            f << template
+          end
+
+          puts "Config file created at: #{filename}"
+          exit 0
         end
       end
 
-      def init(path)
+      def load!(filename)
+        if File.exists?(filename)
+          new(filename)
+        else
+          help
+        end
+      end
 
+      def load_default!
+        load!(File.expand_path(DEFAULT_CONFIG))
       end
 
       def help
@@ -36,11 +48,16 @@ module DbSync
       end
     end
 
-    attr_reader :file
+    attr_reader :file, :data
 
     def initialize(file)
       @file = file
-      @data = YAML.load_file(file)
+
+      if File.exists?(file)
+        @data = YAML.load_file(file)
+      else
+        self.class.help
+      end
     end
   end
 end
