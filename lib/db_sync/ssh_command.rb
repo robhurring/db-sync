@@ -2,15 +2,18 @@ require 'net/ssh'
 
 module DbSync
   class SshCommand
-    attr_reader :server, :command
-
-    def initialize(server, command)
-      @server = server
-      @command = "ls -al ~"
+    def initialize(host: host, user: user, password: password, command: command)
+      @hostname = host
+      @username = user
+      @password = password
+      @command = command
     end
 
     def run
-      Net::SSH.start('bs-stage01-clone.c45233.blueboxgrid.com', 'deploy') do |ssh|
+      options = {}
+      options[:password] = @password if @password
+
+      Net::SSH.start(@hostname, @username, options) do |ssh|
         channel = ssh.open_channel do |ch|
           ch.exec @command do |ch, success|
             raise "could not execute command" unless success

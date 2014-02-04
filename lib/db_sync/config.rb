@@ -64,8 +64,20 @@ module DbSync
       end
     end
 
-    def app(name, env = nil)
+    def app(name)
       @data['apps'][name]
+    end
+
+    def app_server(name)
+      app[name]['server'] || {}
+    end
+
+    def app_db(name)
+      app[name]['db'] || {}
+    end
+
+    def app_commands(name)
+      app[name]['commands'] || {}
     end
   end
 end

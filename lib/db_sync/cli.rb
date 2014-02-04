@@ -37,11 +37,13 @@ module DbSync
       config = get_config(opts)
       app = get_app(config, opts[:from])
 
-      command = SshCommand.new(app[:server], "hostname")
+      command = SshCommand.new(
+        host: app['server']['host'],
+        user: app['server']['user'],
+        password: app['server']['password'],
+        command: 'ls -al ~'
+      )
 
-      # puts opts.inspect
-      # puts app.inspect
-      # puts command.inspect
       command.run
     end
 

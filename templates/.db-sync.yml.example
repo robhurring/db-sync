@@ -12,9 +12,9 @@ apps:
       server:
         # server hostname
         host: sshhostname.com
-        # optional ssh username, defaults to current user
+        # optional: ssh username, defaults to current user
         user: someuser
-        # optional ssh password
+        # optional: ssh password
         password: ohai
       # information for dumping the database
       db:
