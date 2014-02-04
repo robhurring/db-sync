@@ -63,5 +63,9 @@ module DbSync
         self.class.help
       end
     end
+
+    def app(name, env = nil)
+      @data['apps'][name]
+    end
   end
 end

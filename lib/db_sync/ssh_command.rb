@@ -10,6 +10,13 @@ module DbSync
     end
 
     def run
+      Net::SSH.start('bs-stage01-clone.c45233.blueboxgrid.com', 'deploy') do |ssh|
+
+        ssh.exec!("ls -al ~") do |channel, stream, data|
+          STDOUT << data if stream == :stdout
+        end
+
+      end
     end
   end
 end

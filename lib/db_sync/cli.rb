@@ -1,5 +1,7 @@
 require 'optparse'
 require_relative './config'
+require_relative './ssh_command'
+require_relative './local_command'
 
 module DbSync
   class Cli
@@ -33,8 +35,14 @@ module DbSync
     def pull
       opts = parse_opts(:pull)
       config = get_config(opts)
+      app = get_app(config, opts[:from])
 
-      puts opts.inspect
+      command = SshCommand.new(app[:server], "hostname")
+
+      # puts opts.inspect
+      # puts app.inspect
+      # puts command.inspect
+      command.run
     end
 
     # db-sync sync beautysage:qa beautysage:local
@@ -51,6 +59,17 @@ module DbSync
       else
         DbSync::Config.load_default!
       end
+    end
+
+    def get_app(config, opts = {})
+      data = config.app(opts[:server])
+
+      unless data.has_key?(opts[:environment])
+        puts "Could not find environment '#{opts[:environment]}' for app '#{opts[:server]}'!"
+        exit 1
+      end
+
+      data[opts[:environment]]
     end
 
     def help
