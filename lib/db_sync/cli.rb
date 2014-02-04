@@ -10,7 +10,7 @@ module DbSync
 
     def run
       method = (argv.shift || 'help').to_sym
-      if [:pull, :version].include? method
+      if [:pull, :sync, :version].include? method
         send(method)
       else
         help
@@ -23,8 +23,15 @@ module DbSync
       exit 0
     end
 
+    # db-sync pull beautysage:qa > ~/Desktop/somefile.dump
     def pull
       opts = parse_opts(:pull)
+      puts opts.inspect
+    end
+
+    # db-sync sync beautysage:qa beautysage:local
+    def sync
+      opts = parse_opts(:sync)
       puts opts.inspect
     end
 
@@ -32,8 +39,9 @@ module DbSync
       puts %{
         Options
         =======
-        pull      Pull a database from a taps server
-        version   Taps version
+        pull      Pull a database from a remote server to a file
+        sync      Pull a database from a remote server to your localhost
+        version   db-sync version
 
         Add '-h' to any command to see their usage
       }.split($/).map(&:lstrip).join($/)
@@ -41,31 +49,64 @@ module DbSync
 
     def parse_opts(cmd)
       opts = {
-        server: nil,
-        environment: 'production'
+        from: {
+          server: nil,
+          environment: nil
+        },
+        to: {
+          server: nil,
+          environment: nil
+        }
       }
 
       OptionParser.new do |o|
-        o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] SERVER[:ENVIRONMENT]"
-
         case cmd
         when :pull
+          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] FROM:ENVIRONMENT > outfile.dump"
           o.define_head "Pull a database from a remote server"
+        when :sync
+          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] FROM:ENVIRONMENT TO:ENVIRONMENT"
+          o.define_head "Sync a database from a remote server to a local database"
         end
 
         o.on("-e", "--environment", "Pull from this database") { |v| opts[:environment] = v }
         o.parse!(argv)
 
-        opts[:server] = argv.shift
+        opts[:from][:server] = from = argv.shift
+        opts[:to][:server] = to = argv.shift
 
-        if opts[:server].include?(':')
-          opts[:server], opts[:environment] = opts[:server].split(':')
+        if from.to_s.include?(':')
+          opts[:from][:server], opts[:from][:environment] = from.split(':')
         end
 
-        if opts[:server].nil?
-          $stderr.puts "Missing server name!"
+        if to.to_s.include?(':')
+          opts[:to][:server], opts[:to][:environment] = to.split(':')
+        end
+
+        if opts[:from][:server].nil?
+          $stderr.puts "Missing FROM server name!"
           puts o
           exit 1
+        end
+
+        if opts[:from][:environment].nil?
+          $stderr.puts "Missing FROM environment!"
+          puts o
+          exit 1
+        end
+
+        if cmd == :sync
+          if opts[:to][:server].nil?
+            $stderr.puts "Missing TO server name!"
+            puts o
+            exit 1
+          end
+
+          if opts[:to][:environment].nil?
+            $stderr.puts "Missing TO environment!"
+            puts o
+            exit 1
+          end
         end
       end
 

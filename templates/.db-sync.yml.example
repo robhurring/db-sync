@@ -1,11 +1,12 @@
 apps:
   beautysage:
-    new:
-      remote:
-        server: bs.new
-        host: bs-stage01-clone.c45233.blueboxgrid.com
-        database: beautysage_staging
-        username: beautysage_staging
-        password: UXUSuRurJCcn
-      local:
-        database: spree_upgrade_development
+    qa:
+      server: bs.new
+      host: bs-stage01-clone.c45233.blueboxgrid.com
+      database: beautysage_staging
+      username: beautysage_staging
+      password: somepassword
+    local:
+      server: localhost
+      database: spree_upgrade_development
+      username: postgres
