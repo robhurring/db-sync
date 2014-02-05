@@ -9,13 +9,12 @@ apps:
   ecommerce:
     production:
       # optional: information for SSH, if left blank will just execute commands locally
+      # it expects passwordless logins, so there is no password option here
       server:
         # server hostname
         host: sshhostname.com
         # optional: ssh username, defaults to current user
         user: someuser
-        # optional: ssh password
-        password: ohai
       # information for dumping the database
       db:
         # your database hostname
