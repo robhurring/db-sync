@@ -64,6 +64,10 @@ module DbSync
       end
     end
 
+    def apps
+      Array(@data['apps'])
+    end
+
     def app(name)
       @data['apps'][name]
     end

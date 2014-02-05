@@ -14,7 +14,7 @@ module DbSync
 
     def run
       method = (argv.shift || 'help').to_sym
-      if [:init, :dump, :restore, :version].include? method
+      if [:init, :list, :dump, :restore, :version].include? method
         send(method)
       else
         help
@@ -30,6 +30,29 @@ module DbSync
     def init
       filename = argv.shift
       DbSync::Config.init!(filename)
+    end
+
+    def list
+      opts = {}
+      OptionParser.new do |o|
+        o.banner = "Usage: #{File.basename($0)} list [OPTIONS]"
+        o.define_head "List the current apps and environments in your config"
+        o.on("-c", "--config FILENAME", "Path to db-sync config (default: ~/.db-sync.yml)") { |v| opts[:config] = v }
+        o.parse!(argv)
+      end
+
+      config = get_config(opts)
+      delim = '-'
+
+      puts "%-30s | %-50s\n%-30s|%-50s" % ['Application', 'Host', delim*31, delim*50]
+      config.apps.each do |app, environments|
+        environments.keys.each do |environment|
+          name = "#{app}:#{environment}"
+          server = environments[environment]['server']
+          host = server ? server['host'] : 'localhost'
+          puts "%-30s | %-50s" % [name, host]
+        end
+      end
     end
 
     # db-sync dump beautysage:qa > ~/Desktop/somefile.dump
