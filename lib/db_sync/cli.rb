@@ -139,13 +139,13 @@ module DbSync
         end
 
         if opts[:app].nil?
-          $stderr.puts "Missing FROM server name!"
+          $stderr.puts "Missing app name!"
           puts o
           exit 1
         end
 
         if opts[:environment].nil?
-          $stderr.puts "Missing FROM environment!"
+          $stderr.puts "Missing environment!"
           puts o
           exit 1
         end
