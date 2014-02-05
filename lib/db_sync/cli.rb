@@ -106,6 +106,7 @@ module DbSync
         dump      Dump a database from a remote server to a file
         restore   Restore a database from a dumpfile
         init      Create a db-sync config file (default: ~/.db-sync.yml)
+        list      List all applications and environments in your config
         version   db-sync version
 
         Add '-h' to any command to see their usage
