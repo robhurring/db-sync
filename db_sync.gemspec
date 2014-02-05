@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = DbSync::VERSION
   spec.authors       = ["robhurring"]
   spec.email         = ["robhurring@gmail.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.summary       = %q{Handles pg_dump and pg_restore from a config file}
+  spec.description   = %q{Allows dumping and restoring of databases from a config file}
   spec.homepage      = ""
   spec.license       = "MIT"
 

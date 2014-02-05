@@ -27,15 +27,3 @@ module DbSync
     end
   end
 end
-
-__END__
-# pipe from STDIN to process
-
-command = "pg_restore --clean --no-owner --no-acl -v -d spree_upgrade_development"
-open("|#{command}", "w") do |pipe|
-  while data = $stdin.gets
-    pipe << data
-  end
-end
-
-# pipe from process to STDOUT
