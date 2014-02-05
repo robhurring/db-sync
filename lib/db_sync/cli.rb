@@ -1,7 +1,8 @@
 require 'optparse'
+
 require_relative './config'
-require_relative './ssh_command'
-require_relative './local_command'
+require_relative './command'
+require_relative './stream'
 
 module DbSync
   class Cli
@@ -13,7 +14,7 @@ module DbSync
 
     def run
       method = (argv.shift || 'help').to_sym
-      if [:init, :pull, :sync, :version].include? method
+      if [:init, :dump, :restore, :version].include? method
         send(method)
       else
         help
@@ -31,28 +32,29 @@ module DbSync
       DbSync::Config.init!(filename)
     end
 
-    # db-sync pull beautysage:qa > ~/Desktop/somefile.dump
-    def pull
-      opts = parse_opts(:pull)
+    # db-sync dump beautysage:qa > ~/Desktop/somefile.dump
+    def dump
+      opts = parse_opts(:dump)
       config = get_config(opts)
-      app = get_app(config, opts[:from])
+      app = get_app(config, opts)
 
-      command = SshCommand.new(
-        host: app['server']['host'],
-        user: app['server']['user'],
-        password: app['server']['password'],
-        command: 'ls -al ~'
-      )
-
-      command.run
+      Stream.new($stdout) << Command.new(app).dump
     end
 
-    # db-sync sync beautysage:qa beautysage:local
-    def sync
-      opts = parse_opts(:sync)
+    # db-sync restore beautysage:local < ~/Desktop/somefile.dump
+    def restore
+      opts = parse_opts(:restore)
       config = get_config(opts)
+      app = get_app(config, opts)
 
-      puts opts.inspect
+      has_stdin = STDIN.fcntl(Fcntl::F_GETFL, 0) == 0
+
+      if has_stdin
+        Stream.new($stdin) | Command.new(app).restore
+      else
+        puts "No STDIN found!"
+        exit 74
+      end
     end
 
     def get_config(opts = {})
@@ -63,11 +65,11 @@ module DbSync
       end
     end
 
-    def get_app(config, opts = {})
-      data = config.app(opts[:server])
+    def get_app(config, opts)
+      data = config.app(opts[:app])
 
       unless data.has_key?(opts[:environment])
-        puts "Could not find environment '#{opts[:environment]}' for app '#{opts[:server]}'!"
+        puts "Could not find environment '#{opts[:environment]}' for app '#{opts[:app]}'!"
         exit 1
       end
 
@@ -78,8 +80,8 @@ module DbSync
       puts %{
         Options
         =======
-        pull      Pull a database from a remote server to a file
-        sync      Pull a database from a remote server to your localhost
+        dump      Dump a database from a remote server to a file
+        restore   Restore a database from a dumpfile
         init      Create a db-sync config file (default: ~/.db-sync.yml)
         version   db-sync version
 
@@ -89,64 +91,39 @@ module DbSync
 
     def parse_opts(cmd)
       opts = {
-        from: {
-          server: nil,
-          environment: nil
-        },
-        to: {
-          server: nil,
-          environment: nil
-        }
+        app: nil,
+        environment: nil
       }
 
       OptionParser.new do |o|
         case cmd
-        when :pull
-          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] FROM:ENVIRONMENT > outfile.dump"
-          o.define_head "Pull a database from a remote server"
-        when :sync
-          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] FROM:ENVIRONMENT TO:ENVIRONMENT"
-          o.define_head "Sync a database from a remote server to a local database"
+        when :dump
+          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] APP:ENVIRONMENT > outfile.dump"
+          o.define_head "Dump a database from a remote server to STDOUT"
+        when :restore
+          o.banner = "Usage: #{File.basename($0)} #{cmd} [OPTIONS] APP:ENVIRONMENT < infile.dump"
+          o.define_head "Restore a database from STDIN"
         end
 
         o.on("-c", "--config FILENAME", "Path to db-sync config (default: ~/.db-sync.yml)") { |v| opts[:config] = v }
         o.parse!(argv)
 
-        opts[:from][:server] = from = argv.shift
-        opts[:to][:server] = to = argv.shift
+        opts[:app] = app = argv.shift
 
-        if from.to_s.include?(':')
-          opts[:from][:server], opts[:from][:environment] = from.split(':')
+        if app.to_s.include?(':')
+          opts[:app], opts[:environment] = app.split(':')
         end
 
-        if to.to_s.include?(':')
-          opts[:to][:server], opts[:to][:environment] = to.split(':')
-        end
-
-        if opts[:from][:server].nil?
+        if opts[:app].nil?
           $stderr.puts "Missing FROM server name!"
           puts o
           exit 1
         end
 
-        if opts[:from][:environment].nil?
+        if opts[:environment].nil?
           $stderr.puts "Missing FROM environment!"
           puts o
           exit 1
-        end
-
-        if cmd == :sync
-          if opts[:to][:server].nil?
-            $stderr.puts "Missing TO server name!"
-            puts o
-            exit 1
-          end
-
-          if opts[:to][:environment].nil?
-            $stderr.puts "Missing TO environment!"
-            puts o
-            exit 1
-          end
         end
       end
 
