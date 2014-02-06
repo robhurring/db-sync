@@ -25,7 +25,12 @@ module DbSync
       if localhost?
         restore_command
       else
-        raise 'not implemented yet!'
+        auth = "%{user}@%{host}" % {
+          user: @app['server']['user'],
+          host: @app['server']['host']
+        }
+
+        %{ssh #{auth} -C "#{restore_command}"}
       end
     end
 
