@@ -55,7 +55,6 @@ module DbSync
       end
     end
 
-    # db-sync dump beautysage:qa > ~/Desktop/somefile.dump
     def dump
       opts = parse_opts(:dump)
       config = get_config(opts)
@@ -64,7 +63,6 @@ module DbSync
       Stream.new($stdout) << Command.new(app).dump
     end
 
-    # db-sync restore beautysage:local < ~/Desktop/somefile.dump
     def restore
       opts = parse_opts(:restore)
       config = get_config(opts)
